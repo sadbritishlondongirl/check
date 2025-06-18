@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="OneID 2.0 - Universal Authentication System for Obscura. Secure, fast, and user-friendly authentication.">
+    <meta name="keywords" content="authentication, security, 2FA, TOTP, OneID, Obscura">
+    <meta name="author" content="OneID Team">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-src 'none'; object-src 'none'; base-uri 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007AFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="OneID 2.0">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    
+    <title>OneID 2.0 - Universal Authentication System</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="css/styles.css" as="style">
+    <link rel="preload" href="js/app.js" as="script">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p>Processing your request...</p>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">🛡️</div>
+                    <h1>OneID 2.0</h1>
+                </div>
+                <div class="auth-status" id="auth-status">
+                    <span class="status-indicator offline" id="status-indicator"></span>
+                    <span id="status-text">Offline</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Welcome Screen -->
+            <section id="welcome-screen" class="auth-screen active">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <h2>Welcome to OneID 2.0</h2>
+                        <p>Universal Authentication System for Obscura</p>
+                    </div>
+                    <div class="auth-actions">
+                        <button class="btn btn-primary" onclick="showScreen('login-screen')">
+                            Sign In
+                        </button>
+                        <button class="btn btn-secondary" onclick="showScreen('register-screen')">
+                            Create Account
+                        </button>
+                    </div>
+                    <div class="features-preview">
+                        <div class="feature">
+                            <span class="feature-icon">🔐</span>
+                            <span>End-to-End Security</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">📱</span>
+                            <span>Device Trust System</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🔑</span>
+                            <span>Recovery Options</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Registration Screen -->
+            <section id="register-screen" class="auth-screen">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <button class="back-btn" onclick="showScreen('welcome-screen')">← Back</button>
+                        <h2>Create Your OneID Account</h2>
+                        <p>Step <span id="register-step">1</span> of 4</p>
+                    </div>
+
+                    <!-- Step 1: Basic Info -->
+                    <div id="register-step-1" class="register-step active">
+                        <form id="register-form-1">
+                            <div class="form-group">
+                                <label for="register-email">Email Address</label>
+                                <input type="email" id="register-email" name="email" required>
+                                <small class="form-hint">We'll use this for account recovery</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-username">Username</label>
+                                <input type="text" id="register-username" name="username" required>
+                                <small class="form-hint">3-20 characters, letters and numbers only</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-password">Password</label>
+                                <input type="password" id="register-password" name="password" required>
+                                <div class="password-strength" id="password-strength">
+                                    <div class="strength-bar">
+                                        <div class="strength-fill"></div>
+                                    </div>
+                                    <span class="strength-text">Enter a password</span>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Continue</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Step 2: Secret Phrase -->
+                    <div id="register-step-2" class="register-step">
+                        <div class="secret-phrase-setup">
+                            <h3>🔑 Secret Phrase Setup</h3>
+                            <p>Your secret phrase is a backup way to access your account. Keep it secure!</p>
+                            
+                            <div class="secret-phrase-display" id="secret-phrase-display">
+                                <div class="phrase-words" id="phrase-words">
+                                    <!-- Generated words will appear here -->
+                                </div>
+                                <button class="btn btn-secondary btn-small" onclick="generateNewPhrase()">
+                                    🔄 Generate New Phrase
+                                </button>
+                            </div>
+
+                            <div class="phrase-actions">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="phrase-saved-check" required>
+                                    <span class="checkmark"></span>
+                                    I have safely saved my secret phrase
+                                </label>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="prevRegisterStep()">Back</button>
+                                <button class="btn btn-primary" onclick="nextRegisterStep()" disabled id="phrase-continue-btn">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: TOTP Setup -->
+                    <div id="register-step-3" class="register-step">
+                        <div class="totp-setup">
+                            <h3>📱 Two-Factor Authentication</h3>
+                            <p>Scan this QR code with your authenticator app</p>
+                            
+                            <div class="qr-code-container">
+                                <div id="qr-code" class="qr-code"></div>
+                                <div class="qr-instructions">
+                                    <p><strong>Recommended apps:</strong></p>
+                                    <ul>
+                                        <li>Google Authenticator</li>
+                                        <li>Microsoft Authenticator</li>
+                                        <li>Authy</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="totp-verify">
+                                <label for="totp-verify-code">Enter the 6-digit code from your app:</label>
+                                <input type="text" id="totp-verify-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
+                                <button class="btn btn-secondary" onclick="verifyTotpSetup()">Verify</button>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="prevRegisterStep()">Back</button>
+                                <button class="btn btn-primary" onclick="nextRegisterStep()" disabled id="totp-continue-btn">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Backup Codes -->
+                    <div id="register-step-4" class="register-step">
+                        <div class="backup-codes">
+                            <h3>🔐 Backup Codes</h3>
+                            <p>Save these backup codes in a secure place. Each can only be used once.</p>
+                            
+                            <div class="backup-codes-list" id="backup-codes-list">
+                                <!-- Backup codes will be generated here -->
+                            </div>
+
+                            <div class="backup-actions">
+                                <button class="btn btn-secondary" onclick="downloadBackupCodes()">
+                                    📥 Download as Text File
+                                </button>
+                                <button class="btn btn-secondary" onclick="printBackupCodes()">
+                                    🖨️ Print Codes
+                                </button>
+                            </div>
+
+                            <div class="backup-confirm">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="backup-saved-check" required>
+                                    <span class="checkmark"></span>
+                                    I have safely saved my backup codes
+                                </label>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="prevRegisterStep()">Back</button>
+                                <button class="btn btn-primary" onclick="completeRegistration()" disabled id="backup-continue-btn">
+                                    Complete Registration
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Login Screen -->
+            <section id="login-screen" class="auth-screen">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <button class="back-btn" onclick="showScreen('welcome-screen')">← Back</button>
+                        <h2>Sign In to OneID</h2>
+                        <p>Enter your credentials to continue</p>
+                    </div>
+
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label for="login-identifier">Email or Username</label>
+                            <input type="text" id="login-identifier" name="identifier" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" name="password" required>
+                        </div>
+                        <div class="form-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="remember-device">
+                                <span class="checkmark"></span>
+                                Trust this device
+                            </label>
+                            <a href="#" onclick="showScreen('recovery-screen')" class="link">Forgot password?</a>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Sign In</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Two-Factor Verification Screen -->
+            <section id="two-factor-screen" class="auth-screen">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <h2>Two-Factor Authentication</h2>
+                        <p>Complete your login with 2FA</p>
+                    </div>
+
+                    <div class="two-factor-methods" id="two-factor-methods">
+                        <!-- Method selection will be populated here -->
+                    </div>
+
+                    <div class="two-factor-input" id="two-factor-input">
+                        <div class="form-group">
+                            <label for="two-factor-code" id="two-factor-label">Enter verification code:</label>
+                            <input type="text" id="two-factor-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
+                            <small class="form-hint" id="two-factor-hint">Enter the code from your authenticator app</small>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-secondary" onclick="cancelTwoFactor()">Cancel</button>
+                            <button class="btn btn-primary" onclick="verifyTwoFactor()">Verify</button>
+                        </div>
+                    </div>
+
+                    <div class="two-factor-alternatives">
+                        <p>Having trouble? <a href="#" onclick="showAlternativeMethods()" class="link">Try another method</a></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard Screen -->
+            <section id="dashboard-screen" class="auth-screen">
+                <div class="dashboard">
+                    <div class="dashboard-header">
+                        <h2>Security Dashboard</h2>
+                        <button class="btn btn-secondary" onclick="logout()">Sign Out</button>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <!-- Security Score -->
+                        <div class="dashboard-card">
+                            <h3>🎯 OneID Score</h3>
+                            <div class="score-display">
+                                <div class="score-circle">
+                                    <span class="score-value" id="security-score">--</span>
+                                    <span class="score-max">/100</span>
+                                </div>
+                                <div class="score-tier" id="security-tier">--</div>
+                            </div>
+                            <div class="score-details" id="score-details">
+                                <p>Calculating your security score...</p>
+                            </div>
+                        </div>
+
+                        <!-- TOTP Management -->
+                        <div class="dashboard-card">
+                            <h3>📱 Authenticator App</h3>
+                            <div class="totp-status" id="totp-status">
+                                <div class="status-indicator active"></div>
+                                <span>Enabled</span>
+                            </div>
+                            <div class="totp-actions">
+                                <button class="btn btn-secondary btn-small" onclick="regenerateTotp()">
+                                    🔄 Regenerate Secret
+                                </button>
+                                <button class="btn btn-danger btn-small" onclick="disableTotp()">
+                                    ❌ Disable TOTP
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Trusted Devices -->
+                        <div class="dashboard-card">
+                            <h3>💻 Trusted Devices</h3>
+                            <div class="devices-list" id="devices-list">
+                                <div class="device-item current">
+                                    <div class="device-info">
+                                        <span class="device-name">This Device</span>
+                                        <span class="device-type">🖥️ Desktop</span>
+                                    </div>
+                                    <span class="device-status trusted">Trusted</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-small" onclick="manageDevices()">
+                                Manage All Devices
+                            </button>
+                        </div>
+
+                        <!-- Backup Codes -->
+                        <div class="dashboard-card">
+                            <h3>🔐 Backup Codes</h3>
+                            <div class="backup-info" id="backup-info">
+                                <span class="backup-count" id="backup-count">10</span>
+                                <span>codes remaining</span>
+                            </div>
+                            <div class="backup-actions">
+                                <button class="btn btn-secondary btn-small" onclick="viewBackupCodes()">
+                                    👁️ View Codes
+                                </button>
+                                <button class="btn btn-secondary btn-small" onclick="generateNewBackupCodes()">
+                                    🔄 Generate New
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Security Events -->
+                        <div class="dashboard-card full-width">
+                            <h3>🔒 Recent Security Events</h3>
+                            <div class="events-list" id="events-list">
+                                <div class="event-item">
+                                    <div class="event-icon">✅</div>
+                                    <div class="event-info">
+                                        <span class="event-title">Successful login</span>
+                                        <span class="event-time">Just now</span>
+                                        <span class="event-location">📍 Current location</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recovery Screen -->
+            <section id="recovery-screen" class="auth-screen">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <button class="back-btn" onclick="showScreen('login-screen')">← Back</button>
+                        <h2>Account Recovery</h2>
+                        <p>Choose a recovery method</p>
+                    </div>
+
+                    <div class="recovery-methods">
+                        <div class="recovery-method" onclick="selectRecoveryMethod('email')">
+                            <div class="method-icon">📧</div>
+                            <div class="method-info">
+                                <h4>Email Recovery</h4>
+                                <p>Send recovery link to your email</p>
+                            </div>
+                        </div>
+                        
+                        <div class="recovery-method" onclick="selectRecoveryMethod('secret-phrase')">
+                            <div class="method-icon">🔑</div>
+                            <div class="method-info">
+                                <h4>Secret Phrase</h4>
+                                <p>Use your backup secret phrase</p>
+                            </div>
+                        </div>
+
+                        <div class="recovery-method" onclick="selectRecoveryMethod('trusted-contacts')">
+                            <div class="method-icon">👥</div>
+                            <div class="method-info">
+                                <h4>Trusted Contacts</h4>
+                                <p>Get help from trusted contacts</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="recovery-form" class="recovery-form hidden">
+                        <!-- Recovery form will be populated based on selected method -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal Title</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-content" id="modal-content">
+                <!-- Modal content goes here -->
+            </div>
+            <div class="modal-actions" id="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" id="modal-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/totp.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+    
+    <!-- Security Headers -->
+    <script>
+        // Additional security enforcement
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+            location.replace('https:' + window.location.href.substring(window.location.protocol.length));
+        }
+        
+        // Prevent clickjacking
+        if (top !== self) {
+            top.location = self.location;
+        }
+        
+        // Disable console in production
+        if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            console.log = console.warn = console.error = function() {};
+        }
+        
+        // Prevent context menu in production
+        if (location.hostname !== 'localhost') {
+            document.addEventListener('contextmenu', (e) => e.preventDefault());
+            document.addEventListener('selectstart', (e) => e.preventDefault());
+            document.addEventListener('dragstart', (e) => e.preventDefault());
+        }
+    </script>
+</body>
+</html>
